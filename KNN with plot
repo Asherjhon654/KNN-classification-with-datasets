@@ -1,0 +1,67 @@
+Example for KNN with speed and torque
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
+# Sample data
+data = {
+    "Speed": [78,65,23,4],
+    "Torque": [200,3800,800,65]
+}
+
+# Convert to DataFrame
+df = pd.DataFrame(data)
+
+# Define the target category based on Speed
+df['Category'] = np.where(df['Speed'] <= 15, 0, 1)
+
+# Split the data into features and target
+X = df[['Speed', 'Torque']]
+y = df['Category']
+
+# Standardize the features
+scaler = StandardScaler()
+X = scaler.fit_transform(X)
+
+# Split the data into training and test sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Create and train the KNN classifier
+knn = KNeighborsClassifier(n_neighbors=3)
+knn.fit(X_train, y_train)
+
+# Plot the results
+plt.figure(figsize=(10, 6))
+
+# Plot training points
+plt.scatter(X_train[y_train == 0][:, 0], X_train[y_train == 0][:, 1], color='red', label='Category 0 (Speed <= 50)')
+plt.scatter(X_train[y_train == 1][:, 0], X_train[y_train == 1][:, 1], color='green', label='Category 1 (Speed > 50)')
+
+# Plot decision boundary
+x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
+y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
+xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))
+Z = knn.predict(np.c_[xx.ravel(), yy.ravel()])
+Z = Z.reshape(xx.shape)
+plt.contourf(xx, yy, Z, alpha=0.3, cmap=plt.cm.coolwarm)
+# Get new data point from user input
+new_speed = float(input("Enter Speed: "))
+new_torque = float(input("Enter Torque: "))
+# Create a DataFrame for the new data point
+new_data_df = pd.DataFrame({'Speed': [new_speed], 'Torque': [new_torque]})
+# Standardize the new data point
+new_data_scaled = scaler.transform(new_data_df)
+# Make prediction
+prediction = knn.predict(new_data_scaled)[0]
+# Plot the new data point
+plt.scatter(new_data_scaled[0, 0], new_data_scaled[0, 1], color='black', marker='*', s=100, label='New Data Point')
+# Labels and legend
+plt.xlabel("Normalized Speed")
+plt.ylabel("Normalized Torque")
+plt.title("KNN Classification")
+plt.legend()
+plt.show()
+
